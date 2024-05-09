@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using System;
 using DG.Tweening;
 using UniRx;
 using UniRx.Triggers;
@@ -13,12 +13,19 @@ public class BallController : MonoBehaviour
     public float targetThreshold = 1f; // Distance threshold to consider 'directly above' a target
     
     private TargetGenerator _targetGenerator;
+    private GameStateMachine _gameStateMachine;
+    private IDisposable _controlSubscription;
     private Vector3 targetPosition;
+    private bool _isFalling;
 
     [Inject]
-    public void InjectDependencies(TargetGenerator targetGenerator)
+    public void InjectDependencies(TargetGenerator targetGenerator, 
+                                    GameStateMachine gameStateMachine)
     {
         this._targetGenerator = targetGenerator;
+        this._gameStateMachine = gameStateMachine;
+        
+        
     }
     
     private void Start()
@@ -26,9 +33,10 @@ public class BallController : MonoBehaviour
         transform.DORotate(new Vector3(rotationSpeed, 0f, 0f), 1f, RotateMode.LocalAxisAdd)
             .SetEase(Ease.Linear)
             .SetLoops(-1, LoopType.Incremental);
-        
+     
         this.UpdateAsObservable()
             .Where(_ => Input.GetMouseButton(0))
+            .Where(_ => _targetGenerator.IsActivated)
             .Select(_ => Input.mousePosition)
             .Select(screenPos => Camera.main.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, Camera.main.transform.position.y)))
             .Subscribe(worldPos =>
@@ -46,9 +54,14 @@ public class BallController : MonoBehaviour
             })
             .AddTo(this);
     }
-    
+
     private void MoveAndJump()
     {
+        if (_isFalling)
+        {
+            return;
+        }
+        
         var position = Vector3.Lerp(transform.position, targetPosition, Time.deltaTime * moveSpeed);
 
         float height = 0f;
@@ -62,5 +75,20 @@ public class BallController : MonoBehaviour
         
         transform.position = position;
     }
-    
+
+    public void StopLevel()
+    {
+        _isFalling = true;
+        
+        transform.DOMoveY(-25f, 1f)
+            .SetEase(Ease.InQuad);
+    }
+
+    public void PrepareLevel()
+    {
+        _isFalling = false;
+        
+        transform.DOMove(new Vector3(0f,2.46f,0f), 1f)
+            .SetEase(Ease.InQuad);
+    }
 }

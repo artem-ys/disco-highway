@@ -6,8 +6,8 @@ public class Block : MonoBehaviour, ICollidable
 {
     private IBallShooter _ballShooter;
     private CollisionManager _collisionManager;
-    public int RowId { get; set; }
-    public CollidableType Type => CollidableType.Block;
+    public int rowId { get; set; }
+    public CollidableType CollidableType => CollidableType.Block;
 
     public void HandleCollision(ICollidable other)
     {

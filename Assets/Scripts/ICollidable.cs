@@ -7,8 +7,8 @@
 
 public interface ICollidable
 {
-    int RowId { get; set; }
+    int rowId { get; set; }
     
-    CollidableType Type { get; } 
+    CollidableType CollidableType { get; } 
     void HandleCollision(ICollidable other);
 }

@@ -5,22 +5,40 @@ using System.Linq;
 using DG.Tweening;
 using Zenject;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Random = UnityEngine.Random;
 
 public class TargetSpawnData
 {
     public TargetType type;
     public int rowId;
-    public float timeToReach; // Time for the target to reach Z=0 from the start
+    public float timeToReach; 
     public float speed;
     public int beatNum;
+    public AudioController audioController;
+    public IGameManager gameManager;
+    public TargetPool pool;
+    public AudioSource audioSource;
+
+    public TargetSpawnData()
+    {
+    }
+
+    public TargetSpawnData(TargetType type, int rowId, float timeToReach, int beatNum)
+    {
+        this.type = type;
+        this.rowId = rowId;
+        this.timeToReach = timeToReach;
+        this.beatNum = beatNum;
+    }
 }
 
 public class TargetGenerator : MonoBehaviour
 {
     private List<TargetSpawnData> spawnData = new List<TargetSpawnData>();
     private List<Target> allTargets = new List<Target>();
-    public AudioSource audio;
+    public AudioSource audioSource;
+    public AudioController audioController;
     
     public bool IsActivated { get; private set; } = false;
     
@@ -31,13 +49,17 @@ public class TargetGenerator : MonoBehaviour
     public float spawnInterval = 2f; // Seconds
     public float moveDistance = -60f; // Negative Z direction
     public float moveDuration = 0.1f; // Duration for the target to reach its destination
-   
+    private IGameManager _gameManager;
+    private float _startTime;
+
     [Inject]
     public void InjectDependencies(TargetPool[] targetPools,
-        BottomBlocksManager bottomBlocksManager)
+        BottomBlocksManager bottomBlocksManager,
+        IGameManager gameManager)
     {
         this._targetPools = targetPools;
         this._bottomBlocksManager = bottomBlocksManager;
+        this._gameManager = gameManager;
     }
     
     public int GetRandomExcluding(int n, int m, int k, int dist)
@@ -94,57 +116,102 @@ public class TargetGenerator : MonoBehaviour
         return n;
     }
     
-    private void PopulateTestData()
+    public class BeatMultiplierRange
     {
+        public int StartIndex;
+        public int EndIndex;
+        public int Multiplier;
+
+        public BeatMultiplierRange(int start, int end, int multiplier)
+        {
+            StartIndex = start;
+            EndIndex = end;
+            Multiplier = multiplier;
+        }
+    }
+    
+    private void PopulateLevelData()
+    {
+        var multiplierRanges = new List<BeatMultiplierRange>
+        {
+            new(0, 9, 2), 
+           
+            new(17, 33, 2),
+            
+            new(64, 79, 2),
+            
+            new(97, 131, 4), 
+            
+            
+            new(131, 160, 2),
+            
+            //new(1, 160, 2),
+            
+            new(190, 226, 2),
+            
+            new(226, 250, 4),
+            
+            new(297, 331, 4)
+        };
+
         spawnData.Clear();
 
         float beatTime = (60.0f / 170.0f);
         float timeToReach = 0;
+        int beatNum = 0;
+
+        int totalBeats = Mathf.FloorToInt(audioSource.clip.length / beatTime);
         
-        for (int i = 0; i < 250; i++)
+        for (int i = 0; i < 550; i++)
         {
             var type = i < 8 ? 0 : (TargetType)(i%2);
             var rowId = i < 8 ? 2 : i % 5;
             
             var beat = beatTime;
-
-            if (i < 8)
-                beat *= 2;
+            var beatMul = 1;
             
-            if (i > 24 && i < 50)
-                beat *= 2;
-            
-            if (i > 64 && i < 80)
-                beat *= 4;
-            
-            spawnData.Add(new TargetSpawnData()
+            foreach (var range in multiplierRanges.Where(range => beatNum >= range.StartIndex && beatNum < range.EndIndex))
             {
-                type = type, 
-                rowId = rowId, 
-                timeToReach = timeToReach,
-                beatNum = i
-            });
+                beatMul = range.Multiplier;
+                break;
+            }
+
+            beat *= beatMul;
+            
+            spawnData.Add(new TargetSpawnData(type, rowId, timeToReach, beatNum));
+            
+            spawnData.Add(new TargetSpawnData(TargetType.EmptyPlatform, 2, timeToReach, beatNum));
             
             if (type == TargetType.WrongPlatform)
             {
                 rowId = GetRandomExcluding(0, 5, rowId, 1);
                 
-                spawnData.Add(new TargetSpawnData()
-                {
-                    type = TargetType.StandardPlatform, 
-                    rowId = rowId, 
-                    timeToReach = timeToReach,
-                    beatNum = i
-                });
+                spawnData.Add(new TargetSpawnData(
+                    TargetType.StandardPlatform, 
+                    rowId,
+                    timeToReach, 
+                    beatNum));
             }
             
+            beatNum += beatMul;
             timeToReach += beat;
+
+            if (timeToReach > audioSource.clip.length)
+                break;
         }
     }
 
-    private void Awake()
+    public void PrepareLevel()
     {
-        PopulateTestData();
+        foreach (var t in allTargets)
+        {
+            t.Pool.Despawn(t);
+        }
+       
+        allTargets.Clear();
+            
+            
+        PopulateLevelData();
 
         PrepareTargets();
     }
@@ -159,9 +226,12 @@ public class TargetGenerator : MonoBehaviour
             var spawnPosition = new Vector3(bottomBlock.transform.position.x, 0, startMovePosition);
             var selectedPool = _targetPools[(int)targetSpawnData.type];
             targetSpawnData.speed = speed;
+            targetSpawnData.audioController = this.audioController;
+            targetSpawnData.gameManager = _gameManager;
+            targetSpawnData.pool = selectedPool;
+            targetSpawnData.audioSource = audioSource;
             
             var target = selectedPool.Spawn(spawnPosition, Quaternion.identity, targetSpawnData);
-            //target.gameObject.SetActive(false); // Initially inactive, activated when level starts
             
             allTargets.Add(target); 
         }
@@ -169,14 +239,26 @@ public class TargetGenerator : MonoBehaviour
     
     public void StartLevel()
     {
-        audio.Play();
+        _startTime = Time.time;
+        
+        audioSource.Play();
+
+        audioSource.pitch = 1;
+        
+       /* DOTween.To(() => audioSource.pitch, x =>
+            {
+                audioSource.pitch = x; 
+                
+                allTargets.ForEach( t => t.SlowDownMovement(x));
+            }, 1, 2f)
+            .OnComplete(() => { });*/
         
         IsActivated = true;
         
         foreach (var target in allTargets)
         {
             target.Launch(); 
-            target.gameObject.SetActive(true); 
+            //target.gameObject.SetActive(true); 
         }
     }
     
@@ -184,20 +266,10 @@ public class TargetGenerator : MonoBehaviour
     {
         return - (x * x) / (l * l) + 1;
     }
-    
-    public float JumpFunc2(float x, float l)
-    {
-        if (x < -l || x > l)
-        {
-            return 0f;
-        }
-
-        return 0.5f*(float)Math.Cos(Math.PI * x / l) + 0.5f;
-    }
-    
+  
     public bool FindBallBetweenTargets(float ballZPosition, out float centerDistance)
     {
-        List<Target> onlyStandardTargets = allTargets.Where(target => target.targetType == TargetType.StandardPlatform).ToList();
+        List<Target> onlyStandardTargets = allTargets.Where(target => target.Type == TargetType.StandardPlatform).ToList();
         
         for (int i = 0; i < onlyStandardTargets.Count - 1; i++)
         {
@@ -222,13 +294,20 @@ public class TargetGenerator : MonoBehaviour
         centerDistance = 0;
         return false;
     }
-    
-    public float[] GetTargetDistances(float zPosition)
+ 
+    public void StopLevel()
     {
-        return allTargets
-            //.Where(target => target.transform.position.z > zPosition)
-            .Select(target => Mathf.Abs(target.transform.position.z - zPosition))
-            .Distinct()
-            .ToArray();
+        IsActivated = false;
+            
+        allTargets.ForEach(t => t.Deactivate());
+        
+        // Slow down and stop audio
+        DOTween.To(() => audioSource.pitch, x =>
+            {
+                audioSource.pitch = x; 
+                
+                allTargets.ForEach( t => t.SlowDownMovement(x));
+            }, 0, 2f)
+            .OnComplete(() => audioSource.Stop());
     }
 }

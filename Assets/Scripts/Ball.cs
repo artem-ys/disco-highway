@@ -13,7 +13,7 @@ public class Ball : MonoBehaviour, ICollidable
     }
     public void Launch(float speed, int rowId)
     {
-        this.RowId = rowId;
+        this.rowId = rowId;
         this._collisionManager.RegisterCollidable(this);
         
         float moveDistance = 100f; // Example distance
@@ -29,8 +29,8 @@ public class Ball : MonoBehaviour, ICollidable
 
     }
 
-    public int RowId { get; set; }
-    public CollidableType Type => CollidableType.Ball;
+    public int rowId { get; set; }
+    public CollidableType CollidableType => CollidableType.Ball;
 
     public void HandleCollision(ICollidable other)
     {

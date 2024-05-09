@@ -24,9 +24,9 @@ public class CollisionManager : MonoBehaviour
             {
                 // Ensure that we only consider collisions between targets and blocks/balls
                 if (collidable1 != collidable2 && 
-                    collidable1.RowId == collidable2.RowId && 
-                    ((collidable1.Type == CollidableType.Target && collidable2.Type != CollidableType.Target) ||
-                     (collidable2.Type == CollidableType.Target && collidable1.Type != CollidableType.Target)) &&
+                    collidable1.rowId == collidable2.rowId && 
+                    ((collidable1.CollidableType == CollidableType.Target && collidable2.CollidableType != CollidableType.Target) ||
+                     (collidable2.CollidableType == CollidableType.Target && collidable1.CollidableType != CollidableType.Target)) &&
                     Mathf.Abs(((MonoBehaviour)collidable1).transform.position.z - ((MonoBehaviour)collidable2).transform.position.z) < 1f)
                 {
                     collidable1.HandleCollision(collidable2);

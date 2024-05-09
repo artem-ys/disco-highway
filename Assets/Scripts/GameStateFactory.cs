@@ -17,6 +17,10 @@ public class GameStateFactory : IGameStateFactory
                 return _container.Instantiate<PlayState>();
             case GameStateType.Pause:
                 return _container.Instantiate<PauseState>();
+            case GameStateType.Lose:
+                return _container.Instantiate<LoseState>();
+            case GameStateType.Win:
+                return _container.Instantiate<WinState>();
             // Add cases for other states
             default:
                 throw new System.ArgumentOutOfRangeException(nameof(type), $"Not expected state value: {type}");

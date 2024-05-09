@@ -22,3 +22,5 @@ public abstract class TargetPool : MonoMemoryPool<Vector3, Quaternion, TargetSpa
 
 public class TargetType1Pool : TargetPool { }
 public class TargetType2Pool : TargetPool { }
+
+public class TargetType3Pool : TargetPool { }

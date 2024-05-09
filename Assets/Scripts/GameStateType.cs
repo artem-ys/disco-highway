@@ -2,4 +2,6 @@
 {
     Play,
     Pause,
+    Lose,
+    Win
 }

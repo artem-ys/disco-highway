@@ -12,7 +12,8 @@ public class PlayState : IGameState
 
     public void EnterState()
     {
-        _gameManager.EnablePlayerControl(true);
+        _gameManager.StartGame();
+        
         Debug.Log("Game is now in Play State.");
     }
 
@@ -27,7 +28,7 @@ public class PlayState : IGameState
 
     public void ExitState()
     {
-        _gameManager.EnablePlayerControl(false);
+        
     }
 
     public void Dispose()

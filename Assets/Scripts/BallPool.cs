@@ -7,6 +7,6 @@ public class BallPool : MonoMemoryPool<Vector3, float, Ball>
     {
         item.ResetBall();
         item.transform.position = position;
-        item.Launch(speed, item.RowId); // Assuming forward launch for simplicity.
+        item.Launch(speed, item.rowId); // Assuming forward launch for simplicity.
     }
 }

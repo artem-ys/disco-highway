@@ -11,8 +11,8 @@ public class PauseState : IGameState
 
     public void EnterState()
     {
-        // Pause the game, perhaps enable a pause menu
-        Time.timeScale = 0;
+        _gameManager.PrepareGame();
+        
         Debug.Log("Game is now Paused.");
     }
 
@@ -22,6 +22,11 @@ public class PauseState : IGameState
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             _gameManager.ChangeState(GameStateType.Play);
+        }
+        
+        if (Input.GetMouseButtonDown(0))
+        {
+            _gameManager.ChangeState(GameStateType.Play); // Or GameStateType.NextLevel if applicable
         }
     }
 

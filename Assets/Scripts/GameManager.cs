@@ -4,41 +4,36 @@ using Zenject;
 
 public class GameManager : MonoBehaviour, IGameManager
 {
-    private PlayerController _playerController;
     private GameStateMachine _stateMachine;
     private TargetGenerator _targetGenerator;
+    private BallController _ballController;
 
     [Inject]
     public void InjectDependencies(GameStateMachine stateMachine,
-        PlayerController playerController,
-        TargetGenerator targetGenerator)
+        TargetGenerator targetGenerator, 
+        BallController ballController)
     {
         this._stateMachine = stateMachine;
-        this._playerController = playerController;
         this._targetGenerator = targetGenerator;
+        this._ballController = ballController;
     }
     private void Awake()
     { 
         _stateMachine.ChangeState(GameStateType.Pause);
     }
     
-    private void Start()
+    public void StartGame()
     {
-       Observable.EveryUpdate()
-            .Where(_ => Input.GetMouseButtonDown(0)) // Detects a tap or mouse click
-            .First() // Ensures this only happens once
-            .Subscribe(_ => StartGame())
-            .AddTo(this);
+        _targetGenerator.StartLevel(); 
+        EnablePlayerControl(true); 
     }
-    
-    private void StartGame()
+
+    public void PrepareGame()
     {
-        _stateMachine.ChangeState(GameStateType.Play);
-        
-        _targetGenerator.StartLevel(); // Start target generation
-        EnablePlayerControl(true); // Enable player controls if needed
+        _targetGenerator.PrepareLevel();
+        _ballController.PrepareLevel();
     }
-    
+
     private void Update()
     {
         _stateMachine.Update();
@@ -52,5 +47,13 @@ public class GameManager : MonoBehaviour, IGameManager
     public void EnablePlayerControl(bool isEnabled)
     {
         //_playerController.enabled = isEnabled;
+    }
+
+    public void StopGame(bool b)
+    {
+        EnablePlayerControl(false);
+
+        _targetGenerator.StopLevel();
+        _ballController.StopLevel();
     }
 }

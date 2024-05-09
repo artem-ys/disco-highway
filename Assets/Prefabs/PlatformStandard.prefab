@@ -322,9 +322,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d11e0385855448e496d9b72da78ace52, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetType: 0
   platformTransform: {fileID: 1216605176845827798}
   beatNum: {fileID: 648088307578039209}
+  beatsBehaviour: {fileID: 675505917170313276}
 --- !u!65 &1974887422778585438
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -344,8 +344,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 6, y: 1, z: 6}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 6, y: 2, z: 6}
+  m_Center: {x: 0, y: 1, z: 0}
 --- !u!1 &6370774539325138439
 GameObject:
   m_ObjectHideFlags: 0
@@ -464,6 +464,7 @@ GameObject:
   - component: {fileID: 2781093968717705898}
   - component: {fileID: 5619077673528427384}
   - component: {fileID: 1365111870335031765}
+  - component: {fileID: 675505917170313276}
   m_Layer: 0
   m_Name: Base
   m_TagString: Untagged
@@ -560,3 +561,40 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &675505917170313276
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8157783475331953743}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 006a7679234232142ac2e92c135ef772, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bandFrequency: 2
+  threshold: 0
+  X: 1
+  Y: 0
+  Z: 1
+  scaleMultiplier: -1.37
+  rotate: 0
+  speedMultiplier: 0
+  RotateX: 0
+  RotateY: 0
+  RotateZ: 0
+  audioController: {fileID: 0}
+  changeColor: 0
+  colorStart: {r: 0, g: 0, b: 0, a: 0}
+  colorEnd: {r: 0, g: 0, b: 0, a: 0}
+  changeEmission: 0
+  emissionStart: {r: 0, g: 0, b: 0, a: 0}
+  emissionEnd: {r: 0, g: 0, b: 0, a: 0}
+  objectsLight: {fileID: 0}
+  useLight: 0
+  lightColor: {r: 0, g: 0, b: 0, a: 0}
+  lightIntensity: 0
+  toolbarTab: 1
+  currentTab: Scale
+  myObject: {fileID: 5619077673528427384}
