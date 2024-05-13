@@ -42,7 +42,14 @@ public class BallController : MonoBehaviour
             .Subscribe(worldPos =>
             {
                 var position = transform.position;
-                targetPosition = new Vector3(worldPos.x, position.y, position.z);
+                targetPosition = new Vector3(worldPos.x*3, position.y, position.z);
+
+                targetPosition.x = Mathf.Clamp(targetPosition.x, -8.5f, 8.5f);
+                /*var currentPosition = transform.position;
+                var inputPosition = new Vector3(worldPos.x, currentPosition.y, currentPosition.z);
+
+                // Apply sensitivity by interpolating between the current position and the input position
+                targetPosition = Vector3.Lerp(currentPosition, inputPosition, 2f);*/
             })
             .AddTo(this);
         

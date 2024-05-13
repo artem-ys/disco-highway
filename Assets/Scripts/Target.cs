@@ -77,7 +77,7 @@ public class Target : MonoBehaviour, ICollidable
 
         if (gameObject.CompareTag("CorrectBlock"))
         {
-            Debug.Log($"CORRECT BLOCK {_spawnData.beatNum}");
+            //Debug.Log($"CORRECT BLOCK {_spawnData.beatNum}");
 
             lastCorrectBlock = _spawnData.beatNum;
             
@@ -91,7 +91,7 @@ public class Target : MonoBehaviour, ICollidable
 
         if (gameObject.CompareTag($"WrongBlock") && _spawnData.beatNum > lastCorrectBlock)
         {
-            Debug.Log($"WRONG BLOCK {_spawnData.beatNum}");
+            //Debug.Log($"WRONG BLOCK {_spawnData.beatNum}");
             HandleGameEnd();
             TriggerWrongBounceEffect();
         }
