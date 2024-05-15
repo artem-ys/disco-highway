@@ -10,12 +10,11 @@ public class BallController : MonoBehaviour
     public float moveSpeed = 10f;
     public float rotationSpeed = 360f; // Degrees per second
     public float jumpHeight = 5f; // Maximum height the ball jumps
-    public float targetThreshold = 1f; // Distance threshold to consider 'directly above' a target
     
     private TargetGenerator _targetGenerator;
     private GameStateMachine _gameStateMachine;
     private IDisposable _controlSubscription;
-    private Vector3 targetPosition;
+    private Vector3 _targetPosition;
     private bool _isFalling;
 
     [Inject]
@@ -24,8 +23,6 @@ public class BallController : MonoBehaviour
     {
         this._targetGenerator = targetGenerator;
         this._gameStateMachine = gameStateMachine;
-        
-        
     }
     
     private void Start()
@@ -42,14 +39,8 @@ public class BallController : MonoBehaviour
             .Subscribe(worldPos =>
             {
                 var position = transform.position;
-                targetPosition = new Vector3(worldPos.x*3, position.y, position.z);
-
-                targetPosition.x = Mathf.Clamp(targetPosition.x, -8.5f, 8.5f);
-                /*var currentPosition = transform.position;
-                var inputPosition = new Vector3(worldPos.x, currentPosition.y, currentPosition.z);
-
-                // Apply sensitivity by interpolating between the current position and the input position
-                targetPosition = Vector3.Lerp(currentPosition, inputPosition, 2f);*/
+                _targetPosition = new Vector3(worldPos.x*3, position.y, position.z);
+                _targetPosition.x = Mathf.Clamp(_targetPosition.x, -8.5f, 8.5f);
             })
             .AddTo(this);
         
@@ -69,7 +60,7 @@ public class BallController : MonoBehaviour
             return;
         }
         
-        var position = Vector3.Lerp(transform.position, targetPosition, Time.deltaTime * moveSpeed);
+        var position = Vector3.Lerp(transform.position, _targetPosition, Time.deltaTime * moveSpeed);
 
         float height = 0f;
         
@@ -81,6 +72,7 @@ public class BallController : MonoBehaviour
         position.y = height + 1.0f;
         
         transform.position = position;
+        transform.localScale = Vector3.one * 3.0f - 1.0f * Vector3.left * (1 - centerDistance);
     }
 
     public void StopLevel()

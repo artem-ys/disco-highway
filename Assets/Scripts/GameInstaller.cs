@@ -2,7 +2,6 @@ using Zenject;
 
 public class GameInstaller : MonoInstaller
 {
-    public Ball ballPrefab; 
     public Target targetPrefabType1;
     public Target targetPrefabType2;
     public Target targetPrefabType3;
@@ -22,16 +21,7 @@ public class GameInstaller : MonoInstaller
         Container.Bind<IGameManager>().To<GameManager>().FromComponentInHierarchy().AsSingle();
         
         Container.Bind<BottomBlocksManager>().FromComponentInHierarchy().AsSingle();
-        
-        Container.Bind<PlayerController>().FromComponentInHierarchy().AsSingle();
-        
-        Container.Bind<IBallShooter>().To<BallShooter>().AsSingle();
-        
-        Container.BindMemoryPool<Ball, BallPool>()
-            .WithInitialSize(20) // Initial pool size
-            .FromComponentInNewPrefab(ballPrefab)
-            .UnderTransformGroup("Balls"); // Organize pooled objects under this transform
-        
+         
         // Bind TargetGenerator
         Container.Bind<TargetGenerator>().FromComponentInHierarchy().AsSingle();
 
@@ -52,8 +42,6 @@ public class GameInstaller : MonoInstaller
         Container.Bind<TargetPool>().To<TargetType2Pool>().FromResolve();
         Container.Bind<TargetPool>().To<TargetType3Pool>().FromResolve();
         //Container.Bind<TargetPool[]>().FromResolveAll();
-        
-        Container.Bind<CollisionManager>().FromComponentInHierarchy().AsSingle().NonLazy();
         
         Container.Bind<BallController>().FromComponentInHierarchy().AsSingle();
         

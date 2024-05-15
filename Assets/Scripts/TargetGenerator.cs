@@ -20,10 +20,6 @@ public class TargetSpawnData
     public TargetPool pool;
     public AudioSource audioSource;
 
-    public TargetSpawnData()
-    {
-    }
-
     public TargetSpawnData(TargetType type, int rowId, float timeToReach, int beatNum)
     {
         this.type = type;
@@ -35,23 +31,18 @@ public class TargetSpawnData
 
 public class TargetGenerator : MonoBehaviour
 {
-    private List<TargetSpawnData> spawnData = new List<TargetSpawnData>();
-    private List<Target> allTargets = new List<Target>();
+    private readonly List<TargetSpawnData> _spawnData = new List<TargetSpawnData>();
+    private readonly List<Target> _allTargets = new List<Target>();
     public AudioSource audioSource;
     public AudioController audioController;
+    private float originalPitch;
     
     public bool IsActivated { get; private set; } = false;
-    
-    // Injected array of all target pools
+
     private TargetPool[] _targetPools;
     private BottomBlocksManager _bottomBlocksManager;
-    
-    public float spawnInterval = 2f; // Seconds
-    public float moveDistance = -60f; // Negative Z direction
-    public float moveDuration = 0.1f; // Duration for the target to reach its destination
     private IGameManager _gameManager;
-    private float _startTime;
-
+    
     [Inject]
     public void InjectDependencies(TargetPool[] targetPools,
         BottomBlocksManager bottomBlocksManager,
@@ -61,7 +52,12 @@ public class TargetGenerator : MonoBehaviour
         this._bottomBlocksManager = bottomBlocksManager;
         this._gameManager = gameManager;
     }
-    
+
+    private void Start()
+    {
+        this.originalPitch = audioSource.pitch;
+    }
+
     public int GetRandomExcluding(int n, int m, int k, int dist)
     {
         int result;
@@ -154,7 +150,7 @@ public class TargetGenerator : MonoBehaviour
             new(297, 331, 4)
         };
 
-        spawnData.Clear();
+        _spawnData.Clear();
 
         float beatTime = (60.0f / 170.0f);
         float timeToReach = 0;
@@ -178,15 +174,15 @@ public class TargetGenerator : MonoBehaviour
 
             beat *= beatMul;
             
-            spawnData.Add(new TargetSpawnData(type, rowId, timeToReach, beatNum));
+            _spawnData.Add(new TargetSpawnData(type, rowId, timeToReach, beatNum));
             
-            spawnData.Add(new TargetSpawnData(TargetType.EmptyPlatform, 2, timeToReach, beatNum));
+            _spawnData.Add(new TargetSpawnData(TargetType.EmptyPlatform, 2, timeToReach, beatNum));
             
             if (type == TargetType.WrongPlatform)
             {
                 rowId = GetRandomExcluding(0, 5, rowId, 1);
                 
-                spawnData.Add(new TargetSpawnData(
+                _spawnData.Add(new TargetSpawnData(
                     TargetType.StandardPlatform, 
                     rowId,
                     timeToReach, 
@@ -203,12 +199,12 @@ public class TargetGenerator : MonoBehaviour
 
     public void PrepareLevel()
     {
-        foreach (var t in allTargets)
+        foreach (var t in _allTargets)
         {
             t.Pool.Despawn(t);
         }
        
-        allTargets.Clear();
+        _allTargets.Clear();
             
             
         PopulateLevelData();
@@ -218,7 +214,7 @@ public class TargetGenerator : MonoBehaviour
     
     private void PrepareTargets()
     {
-        foreach (var targetSpawnData in spawnData)
+        foreach (var targetSpawnData in _spawnData)
         {
             var speed = 50.0f;
             var startMovePosition = targetSpawnData.timeToReach * speed;
@@ -233,29 +229,29 @@ public class TargetGenerator : MonoBehaviour
             
             var target = selectedPool.Spawn(spawnPosition, Quaternion.identity, targetSpawnData);
             
-            allTargets.Add(target); 
+            _allTargets.Add(target); 
         }
     }
     
     public void StartLevel()
     {
-        _startTime = Time.time;
-        
         audioSource.Play();
-
-        audioSource.pitch = 1;
         
-       /* DOTween.To(() => audioSource.pitch, x =>
+        audioSource.pitch = this.originalPitch;
+        
+        audioSource.volume = 0;
+       
+        
+        DOTween.To(() => audioSource.volume, x =>
             {
-                audioSource.pitch = x; 
-                
-                allTargets.ForEach( t => t.SlowDownMovement(x));
-            }, 1, 2f)
-            .OnComplete(() => { });*/
+                audioSource.volume = x;
+            }, 1, 5f)
+            .OnComplete(() => { })
+            .SetEase(Ease.InQuad);
         
         IsActivated = true;
         
-        foreach (var target in allTargets)
+        foreach (var target in _allTargets)
         {
             target.Launch(); 
             //target.gameObject.SetActive(true); 
@@ -269,7 +265,7 @@ public class TargetGenerator : MonoBehaviour
   
     public bool FindBallBetweenTargets(float ballZPosition, out float centerDistance)
     {
-        List<Target> onlyStandardTargets = allTargets.Where(target => target.Type == TargetType.StandardPlatform).ToList();
+        List<Target> onlyStandardTargets = _allTargets.Where(target => target.Type == TargetType.StandardPlatform).ToList();
         
         for (int i = 0; i < onlyStandardTargets.Count - 1; i++)
         {
@@ -299,14 +295,14 @@ public class TargetGenerator : MonoBehaviour
     {
         IsActivated = false;
             
-        allTargets.ForEach(t => t.Deactivate());
+        _allTargets.ForEach(t => t.Deactivate());
         
         // Slow down and stop audio
         DOTween.To(() => audioSource.pitch, x =>
             {
                 audioSource.pitch = x; 
                 
-                allTargets.ForEach( t => t.SlowDownMovement(x));
+                _allTargets.ForEach( t => t.SlowDownMovement(x));
             }, 0, 2f)
             .OnComplete(() => audioSource.Stop());
     }

@@ -9,7 +9,7 @@ public enum TargetType
     EmptyPlatform,
 }
 
-public class Target : MonoBehaviour, ICollidable
+public class Target : MonoBehaviour
 {
     private TargetSpawnData _spawnData;
     
@@ -24,9 +24,7 @@ public class Target : MonoBehaviour, ICollidable
         get => _spawnData.rowId;
         set => _spawnData.rowId = value;
     }
-
-    public CollidableType CollidableType => CollidableType.Target;
-
+    
     public TargetType Type => _spawnData.type;
 
     public TargetPool Pool => _spawnData.pool;
@@ -34,12 +32,7 @@ public class Target : MonoBehaviour, ICollidable
     private bool _isFinal = false;
     private bool _isTriggersActive = true;
 
-    public static int lastCorrectBlock = 0;
-
-    public void HandleCollision(ICollidable other)
-    {
-        
-    }
+    private static int _lastCorrectBlock = 0;
     
     public void Initialize(TargetSpawnData spawnData)
     {
@@ -79,7 +72,7 @@ public class Target : MonoBehaviour, ICollidable
         {
             //Debug.Log($"CORRECT BLOCK {_spawnData.beatNum}");
 
-            lastCorrectBlock = _spawnData.beatNum;
+            _lastCorrectBlock = _spawnData.beatNum;
             
             if (_spawnData.beatNum > 530)
             {
@@ -89,7 +82,7 @@ public class Target : MonoBehaviour, ICollidable
             TriggerBounceEffect();
         }
 
-        if (gameObject.CompareTag($"WrongBlock") && _spawnData.beatNum > lastCorrectBlock)
+        if (gameObject.CompareTag($"WrongBlock") && _spawnData.beatNum > _lastCorrectBlock)
         {
             //Debug.Log($"WRONG BLOCK {_spawnData.beatNum}");
             HandleGameEnd();
